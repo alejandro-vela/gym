@@ -1,0 +1,51 @@
+name: gymtrack_pro
+description: Tu compañero de gimnasio personal - GymTrack Pro
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  sqflite: ^2.3.2
+  path: ^1.9.0
+  path_provider: ^2.1.2
+  image_picker: ^1.0.7
+  provider: ^6.1.2
+  intl: ^0.19.0
+  fl_chart: ^0.67.0
+  shared_preferences: ^2.2.3
+  uuid: ^4.3.3
+  percent_indicator: ^4.2.3
+  health: ^10.2.0
+  firebase_core: ^3.13.1
+  firebase_auth: ^5.5.2
+  google_sign_in: ^6.2.1
+  sign_in_with_apple: ^6.1.4
+  crypto: ^3.0.6
+
+  nested: any
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21
+  web:
+    generate: false
+  macos:
+    generate: false
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/i18n/
