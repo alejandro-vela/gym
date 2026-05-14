@@ -82,17 +82,6 @@ class _LoginScreenState extends State<LoginScreen>
                 icon: _GoogleIcon(),
                 onTap: () => unawaited(_presenter.signInWithGoogle(context)),
               ),
-              const SizedBox(height: 12),
-              _SocialButton(
-                label: _model.appleBtn,
-                icon: const Icon(
-                  Icons.apple_rounded,
-                  color: Colors.white,
-                  size: 22,
-                ),
-                onTap: () => unawaited(_presenter.signInWithApple(context)),
-                dark: true,
-              ),
               const Spacer(),
               Text(
                 _model.legal,
@@ -145,13 +134,11 @@ class _SocialButton extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.onTap,
-    this.dark = false,
   });
 
   final String label;
   final Widget icon;
   final VoidCallback onTap;
-  final bool dark;
 
   @override
   Widget build(BuildContext context) {
@@ -161,10 +148,8 @@ class _SocialButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
-          backgroundColor: dark ? Colors.black : Colors.white,
-          side: BorderSide(
-            color: dark ? Colors.white24 : Colors.transparent,
-          ),
+          backgroundColor: Colors.white,
+          side: const BorderSide(color: Colors.transparent),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
@@ -176,8 +161,8 @@ class _SocialButton extends StatelessWidget {
             const SizedBox(width: 12),
             Text(
               label,
-              style: TextStyle(
-                color: dark ? Colors.white : Colors.black87,
+              style: const TextStyle(
+                color: Colors.black87,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
