@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../i18n/language_provider.dart';
 import '../models/achievement.dart';
 import '../services/progressive_overload_service.dart';
 import '../theme/app_theme.dart';
@@ -82,9 +84,9 @@ class _PrCelebrationBannerState extends State<PrCelebrationBanner>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      const Text(
-                        '¡NUEVO RÉCORD PERSONAL!',
-                        style: TextStyle(
+                      Text(
+                        context.read<LanguageProvider>().strings.achievements.prBannerTitle,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w900,
                           fontSize: 14,
@@ -168,15 +170,20 @@ class ProgressionSuggestionCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(
-                  hasIncrease
-                      ? 'Sube el peso la próxima vez'
-                      : 'Mantén el peso',
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
+                Builder(
+                  builder: (BuildContext ctx) {
+                    final String label = hasIncrease
+                        ? ctx.read<LanguageProvider>().strings.overload.suggestionIncrease
+                        : ctx.read<LanguageProvider>().strings.overload.suggestionMaintain;
+                    return Text(
+                      label,
+                      style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    );
+                  },
                 ),
                 Text(
                   suggestion.reason,
@@ -198,12 +205,14 @@ class ProgressionSuggestionCard extends StatelessWidget {
                 color: color.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(
-                '+${suggestion.weightIncrease}kg',
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 13,
+              child: Builder(
+                builder: (BuildContext ctx) => Text(
+                  ctx.read<LanguageProvider>().strings.overload.increase(suggestion.weightIncrease),
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ),
@@ -236,12 +245,14 @@ class StreakBadge extends StatelessWidget {
         children: <Widget>[
           const Text('🔥', style: TextStyle(fontSize: 14)),
           const SizedBox(width: 4),
-          Text(
-            '$streak días',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
+          Builder(
+            builder: (BuildContext ctx) => Text(
+              '$streak ${ctx.read<LanguageProvider>().strings.common.days}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
             ),
           ),
         ],

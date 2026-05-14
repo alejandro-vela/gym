@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../i18n/app_localizations.dart';
+import '../../i18n/language_provider.dart';
 import '../../models/machine.dart';
 import '../../models/routine_exercise.dart';
 import '../../providers/machines_provider.dart';
 import '../../providers/routine_provider.dart';
 import '../../theme/app_theme.dart';
+import 'widgets/exercise_day_banner.dart';
+import 'widgets/weight_input_row.dart';
 
 class AddExerciseScreen extends StatefulWidget {
   const AddExerciseScreen({
@@ -86,11 +90,15 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations loc = context.read<LanguageProvider>().strings;
+    final AddExerciseStrings s = loc.addExercise;
+    final RoutineStrings rs = loc.routine;
+    final CommonStrings cs = loc.common;
     final List<Machine> machines = context.read<MachinesProvider>().machines;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Editar ejercicio' : 'Nuevo ejercicio'),
+        title: Text(_isEditing ? s.titleEdit : s.titleNew),
         actions: <Widget>[
           TextButton(
             onPressed: _isSaving ? null : _save,
@@ -103,9 +111,9 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                       color: AppTheme.primaryOrange,
                     ),
                   )
-                : const Text(
-                    'Guardar',
-                    style: TextStyle(
+                : Text(
+                    cs.save,
+                    style: const TextStyle(
                       color: AppTheme.primaryOrange,
                       fontWeight: FontWeight.bold,
                     ),
@@ -118,41 +126,16 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: <Widget>[
-            // Day indicator
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 10,
-              ),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryOrange.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: <Widget>[
-                  const Icon(
-                    Icons.today_rounded,
-                    color: AppTheme.primaryOrange,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    kDayNames[widget.dayOfWeek],
-                    style: const TextStyle(
-                      color: AppTheme.primaryOrange,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+            ExerciseDayBanner(
+              strings: rs,
+              dayOfWeek: widget.dayOfWeek,
             ),
             const SizedBox(height: 20),
 
-            // Link to machine (optional)
             if (machines.isNotEmpty) ...<Widget>[
-              const Text(
-                'Vincular a máquina (opcional)',
-                style: TextStyle(
+              Text(
+                s.linkMachineLabel,
+                style: const TextStyle(
                   color: AppTheme.primaryOrange,
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
@@ -162,15 +145,15 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
               DropdownButtonFormField<Machine?>(
                 initialValue: _selectedMachine,
                 dropdownColor: AppTheme.cardDark,
-                decoration: const InputDecoration(
-                  labelText: 'Seleccionar máquina',
+                decoration: InputDecoration(
+                  labelText: s.linkMachineLabel,
                 ),
                 style: const TextStyle(color: AppTheme.textPrimary),
                 items: <DropdownMenuItem<Machine?>>[
-                  const DropdownMenuItem<Machine?>(
+                  DropdownMenuItem<Machine?>(
                     child: Text(
-                      'Sin máquina',
-                      style: TextStyle(color: AppTheme.textSecondary),
+                      s.noMachine,
+                      style: const TextStyle(color: AppTheme.textSecondary),
                     ),
                   ),
                   ...machines.map(
@@ -195,22 +178,20 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
               const SizedBox(height: 20),
             ],
 
-            // Exercise name
             TextFormField(
               controller: _nameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Nombre del ejercicio *',
+              decoration: InputDecoration(
+                labelText: s.fieldName,
               ),
               style: const TextStyle(color: AppTheme.textPrimary),
               validator: (String? v) =>
-                  v == null || v.isEmpty ? 'Campo requerido' : null,
+                  v == null || v.isEmpty ? cs.requiredField : null,
             ),
             const SizedBox(height: 20),
 
-            // Sets, Reps, Weight
-            const Text(
-              'Parámetros',
-              style: TextStyle(
+            Text(
+              s.sectionParams,
+              style: const TextStyle(
                 color: AppTheme.primaryOrange,
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
@@ -220,8 +201,8 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
             Row(
               children: <Widget>[
                 Expanded(
-                  child: _NumberInput(
-                    label: 'Series',
+                  child: NumberInput(
+                    label: s.fieldSets,
                     value: _sets,
                     min: 1,
                     max: 20,
@@ -230,8 +211,8 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _NumberInput(
-                    label: 'Reps',
+                  child: NumberInput(
+                    label: s.fieldReps,
                     value: _reps,
                     min: 1,
                     max: 100,
@@ -241,19 +222,20 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            _WeightInput(
+            WeightInputRow(
+              label: s.fieldWeight,
+              helperText: s.weightHelper,
               value: _weight,
               onChanged: (double v) => setState(() => _weight = v),
             ),
             const SizedBox(height: 20),
 
-            // Notes
             TextFormField(
               controller: _notesCtrl,
               maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Notas (opcional)',
-                hintText: 'Ej: Foco en contracción muscular...',
+              decoration: InputDecoration(
+                labelText: s.fieldNotes,
+                hintText: s.notesHint,
               ),
               style: const TextStyle(color: AppTheme.textPrimary),
             ),
@@ -261,193 +243,6 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _NumberInput extends StatelessWidget {
-  const _NumberInput({
-    required this.label,
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.onChanged,
-  });
-  final String label;
-  final int value;
-  final int min;
-  final int max;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppTheme.cardDark,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF333333)),
-      ),
-      child: Column(
-        children: <Widget>[
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: <Widget>[
-              GestureDetector(
-                onTap: value > min ? () => onChanged(value - 1) : null,
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: value > min
-                        ? AppTheme.primaryOrange.withValues(alpha: 0.2)
-                        : AppTheme.cardDark,
-                    borderRadius: BorderRadius.circular(7),
-                  ),
-                  child: const Icon(
-                    Icons.remove_rounded,
-                    size: 16,
-                    color: AppTheme.primaryOrange,
-                  ),
-                ),
-              ),
-              Text(
-                '$value',
-                style: const TextStyle(
-                  color: AppTheme.textPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              GestureDetector(
-                onTap: value < max ? () => onChanged(value + 1) : null,
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryOrange.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(7),
-                  ),
-                  child: const Icon(
-                    Icons.add_rounded,
-                    size: 16,
-                    color: AppTheme.primaryOrange,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _WeightInput extends StatelessWidget {
-  const _WeightInput({required this.value, required this.onChanged});
-  final double value;
-  final ValueChanged<double> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppTheme.cardDark,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF333333)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const Text(
-            'Peso (kg)',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: <Widget>[
-              GestureDetector(
-                onTap: value >= 2.5
-                    ? () => onChanged((value - 2.5).clamp(0, 999))
-                    : null,
-                child: const _WeightBtn(icon: Icons.remove_rounded),
-              ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: value >= 5
-                    ? () => onChanged((value - 5).clamp(0, 999))
-                    : null,
-                child: const _WeightBtn(
-                  icon: Icons.keyboard_double_arrow_left_rounded,
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  children: <Widget>[
-                    Text(
-                      '${value.toStringAsFixed(1)} kg',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: () => onChanged((value + 5).clamp(0, 999)),
-                child: const _WeightBtn(
-                  icon: Icons.keyboard_double_arrow_right_rounded,
-                ),
-              ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () => onChanged((value + 2.5).clamp(0, 999)),
-                child: const _WeightBtn(icon: Icons.add_rounded),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Center(
-            child: Text(
-              '-5 · -2.5        +2.5 · +5',
-              style: TextStyle(
-                color: AppTheme.textSecondary.withValues(alpha: 0.5),
-                fontSize: 10,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _WeightBtn extends StatelessWidget {
-  const _WeightBtn({required this.icon});
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        color: AppTheme.primaryOrange.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(9),
-      ),
-      child: Icon(icon, size: 18, color: AppTheme.primaryOrange),
     );
   }
 }

@@ -4,10 +4,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../i18n/app_localizations.dart';
+import '../../i18n/language_provider.dart';
 import '../../models/machine.dart';
 import '../../providers/machines_provider.dart';
 import '../../theme/app_theme.dart';
 import 'add_edit_machine_screen.dart';
+import 'widgets/machine_info_section.dart';
 
 class MachineDetailScreen extends StatelessWidget {
   const MachineDetailScreen({super.key, required this.machine});
@@ -68,7 +71,6 @@ class MachineDetailScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             sliver: SliverList(
               delegate: SliverChildListDelegate(<Widget>[
-                // Header
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -92,25 +94,23 @@ class MachineDetailScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    _DifficultyBadge(difficulty: machine.difficulty),
+                    MachineDifficultyBadge(difficulty: machine.difficulty),
                   ],
                 ),
                 const SizedBox(height: 16),
 
-                // Muscle groups
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
                   children: machine.muscleGroups
-                      .map((String g) => _MuscleChip(label: g))
+                      .map((String g) => MachineMuscleChip(label: g))
                       .toList(),
                 ),
                 const SizedBox(height: 20),
 
-                // Description
-                _Section(
+                MachineSection(
                   icon: Icons.info_outline_rounded,
-                  title: 'Descripción',
+                  title: context.read<LanguageProvider>().strings.machines.detailDescription,
                   child: Text(
                     machine.description,
                     style: const TextStyle(
@@ -121,10 +121,9 @@ class MachineDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // How to use
-                _Section(
+                MachineSection(
                   icon: Icons.play_circle_outline_rounded,
-                  title: 'Cómo usarla',
+                  title: context.read<LanguageProvider>().strings.machines.detailHowToUse,
                   color: AppTheme.info,
                   child: Text(
                     machine.howToUse,
@@ -136,40 +135,11 @@ class MachineDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // Precautions
                 if (machine.precautions.isNotEmpty) ...<Widget>[
-                  _Section(
-                    icon: Icons.warning_amber_rounded,
-                    title: 'Precauciones',
-                    color: AppTheme.warning,
-                    child: Column(
-                      children: <Widget>[
-                        if (machine.precautionPhotoPath != null &&
-                            File(machine.precautionPhotoPath!)
-                                .existsSync())
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.file(
-                              File(machine.precautionPhotoPath!),
-                              width: double.infinity,
-                              height: 160,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        if (machine.precautionPhotoPath != null)
-                          const SizedBox(height: 12),
-                        ...machine.precautions
-                            .asMap()
-                            .entries
-                            .map(
-                              (MapEntry<int, String> entry) =>
-                                  _PrecautionTile(
-                                number: entry.key + 1,
-                                text: entry.value,
-                              ),
-                            ),
-                      ],
-                    ),
+                  MachinePrecautionsSection(
+                    title: context.read<LanguageProvider>().strings.machines.detailPrecautions,
+                    precautions: machine.precautions,
+                    precautionPhotoPath: machine.precautionPhotoPath,
                   ),
                 ],
                 const SizedBox(height: 80),
@@ -182,22 +152,24 @@ class MachineDetailScreen extends StatelessWidget {
   }
 
   void _confirmDelete(BuildContext context) {
+    final MachinesStrings s = context.read<LanguageProvider>().strings.machines;
+    final CommonStrings cs = context.read<LanguageProvider>().strings.common;
     unawaited(showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.cardDark,
-        title: const Text(
-          'Eliminar máquina',
-          style: TextStyle(color: AppTheme.textPrimary),
+        title: Text(
+          s.confirmDeleteTitle,
+          style: const TextStyle(color: AppTheme.textPrimary),
         ),
         content: Text(
-          '¿Eliminar "${machine.name}"? Esta acción no se puede deshacer.',
+          s.confirmDeleteBody.replaceAll('{name}', machine.name),
           style: const TextStyle(color: AppTheme.textSecondary),
         ),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: Text(cs.cancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -208,181 +180,14 @@ class MachineDetailScreen extends StatelessWidget {
                   .read<MachinesProvider>()
                   .deleteMachine(machine.id!);
               if (context.mounted) {
-                Navigator.pop(context); // close dialog
-                Navigator.pop(context); // go back to list
+                Navigator.pop(context);
+                Navigator.pop(context);
               }
             },
-            child: const Text('Eliminar'),
+            child: Text(cs.delete),
           ),
         ],
       ),
     ),);
-  }
-}
-
-class _Section extends StatelessWidget {
-  const _Section({
-    required this.icon,
-    required this.title,
-    required this.child,
-    this.color = AppTheme.primaryOrange,
-  });
-  final IconData icon;
-  final String title;
-  final Widget child;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardDark,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Icon(icon, color: color, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _PrecautionTile extends StatelessWidget {
-  const _PrecautionTile({required this.number, required this.text});
-  final int number;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            width: 22,
-            height: 22,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: AppTheme.warning,
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              '$number',
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                color: AppTheme.textSecondary,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MuscleChip extends StatelessWidget {
-  const _MuscleChip({required this.label});
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppTheme.primaryOrange.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.primaryOrange.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: AppTheme.primaryOrange,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
-
-class _DifficultyBadge extends StatelessWidget {
-  const _DifficultyBadge({required this.difficulty});
-  final int difficulty;
-
-  String get label {
-    switch (difficulty) {
-      case 1:
-        return 'Principiante';
-      case 2:
-        return 'Intermedio';
-      case 3:
-        return 'Avanzado';
-      default:
-        return '';
-    }
-  }
-
-  Color get color {
-    switch (difficulty) {
-      case 1:
-        return AppTheme.success;
-      case 2:
-        return AppTheme.warning;
-      case 3:
-        return AppTheme.danger;
-      default:
-        return AppTheme.success;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
   }
 }

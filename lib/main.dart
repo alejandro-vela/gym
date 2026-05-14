@@ -6,19 +6,22 @@ import 'package:flutter/services.dart';
 import 'package:nested/nested.dart';
 import 'package:provider/provider.dart';
 
+import 'firebase_options.dart';
 import 'i18n/language_provider.dart';
+import 'providers/auth_provider.dart';
 import 'providers/health_provider.dart';
 import 'providers/machines_provider.dart';
 import 'providers/pr_streak_provider.dart';
 import 'providers/routine_provider.dart';
 import 'providers/workout_provider.dart';
+import 'screens/login/login_screen.dart';
 import 'screens/main_shell.dart';
 import 'services/database_service.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   final LanguageProvider languageProvider = LanguageProvider();
   await languageProvider.initialize();
   await SystemChrome.setPreferredOrientations(<DeviceOrientation>[
@@ -37,6 +40,7 @@ class GymTrackApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: <SingleChildWidget>[
+        ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider()),
         ChangeNotifierProvider<LanguageProvider>.value(value: languageProvider),
         ChangeNotifierProvider<MachinesProvider>(
           create: (_) {
@@ -85,9 +89,25 @@ class GymTrackApp extends StatelessWidget {
         theme: AppTheme.darkTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.dark,
-        home: const MainShell(),
+        home: const _AuthGate(),
         debugShowCheckedModeBanner: false,
       ),
     );
+  }
+}
+
+class _AuthGate extends StatelessWidget {
+  const _AuthGate();
+
+  @override
+  Widget build(BuildContext context) {
+    final AuthStatus status = context.watch<AuthProvider>().status;
+    return switch (status) {
+      AuthStatus.loading => const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        ),
+      AuthStatus.authenticated => const MainShell(),
+      AuthStatus.unauthenticated => const LoginScreen(),
+    };
   }
 }

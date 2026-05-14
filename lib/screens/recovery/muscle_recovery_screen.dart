@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../i18n/app_localizations.dart';
+import '../../i18n/language_provider.dart';
 import '../../models/achievement.dart';
 import '../../providers/pr_streak_provider.dart';
 import '../../theme/app_theme.dart';
@@ -24,9 +26,11 @@ class _MuscleRecoveryScreenState extends State<MuscleRecoveryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final RecoveryStrings rs =
+        context.watch<LanguageProvider>().strings.recovery;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recuperación muscular'),
+        title: Text(rs.title),
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -72,6 +76,8 @@ class _MuscleRecoveryScreenState extends State<MuscleRecoveryScreen> {
               .map((MapEntry<String, MuscleStatus> e) => e.key)
               .toList();
 
+          final RecoveryStrings rs =
+              context.read<LanguageProvider>().strings.recovery;
           return ListView(
             padding: const EdgeInsets.all(16),
             children: <Widget>[
@@ -80,25 +86,22 @@ class _MuscleRecoveryScreenState extends State<MuscleRecoveryScreen> {
                 _AlertBanner(
                   color: AppTheme.danger,
                   icon: Icons.warning_amber_rounded,
-                  title: 'Músculos fatigados',
-                  body:
-                      'Evita entrenar: ${fatiguedMuscles.join(', ')}',
+                  title: rs.alertFatiguedTitle,
+                  body: rs.fatiguedBody(fatiguedMuscles.join(', ')),
                 )
               else if (recoveringMuscles.isNotEmpty)
                 _AlertBanner(
                   color: AppTheme.warning,
                   icon: Icons.hourglass_bottom_rounded,
-                  title: 'En recuperación',
-                  body:
-                      'Recuperando: ${recoveringMuscles.join(', ')}',
+                  title: rs.alertRecoveringTitle,
+                  body: rs.recoveringBody(recoveringMuscles.join(', ')),
                 )
               else
-                const _AlertBanner(
+                _AlertBanner(
                   color: AppTheme.success,
                   icon: Icons.check_circle_rounded,
-                  title: '¡Todo recuperado!',
-                  body:
-                      'Todos tus músculos están listos para entrenar.',
+                  title: rs.alertFreshTitle,
+                  body: rs.alertFreshBody,
                 ),
               const SizedBox(height: 20),
 
@@ -111,9 +114,9 @@ class _MuscleRecoveryScreenState extends State<MuscleRecoveryScreen> {
                 ),
                 child: Column(
                   children: <Widget>[
-                    const Text(
-                      'Toca un músculo para ver detalles',
-                      style: TextStyle(
+                    Text(
+                      rs.tapHint,
+                      style: const TextStyle(
                         color: AppTheme.textSecondary,
                         fontSize: 12,
                       ),
@@ -129,9 +132,9 @@ class _MuscleRecoveryScreenState extends State<MuscleRecoveryScreen> {
               const SizedBox(height: 20),
 
               // Muscle list
-              const Text(
-                'Estado detallado',
-                style: TextStyle(
+              Text(
+                rs.detailTitle,
+                style: const TextStyle(
                   color: AppTheme.textPrimary,
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
@@ -144,6 +147,7 @@ class _MuscleRecoveryScreenState extends State<MuscleRecoveryScreen> {
                   status: statusMap[muscle] ?? MuscleStatus.fresh,
                   percent: percentMap[muscle] ?? 1.0,
                   entry: provider.latestByMuscle[muscle],
+                  strings: rs,
                 ),
               ),
               const SizedBox(height: 40),
@@ -216,11 +220,13 @@ class _MuscleListTile extends StatelessWidget {
     required this.status,
     required this.percent,
     required this.entry,
+    required this.strings,
   });
   final String muscle;
   final MuscleStatus status;
   final double percent;
   final MuscleRecoveryEntry? entry;
+  final RecoveryStrings strings;
 
   @override
   Widget build(BuildContext context) {
@@ -257,10 +263,10 @@ class _MuscleListTile extends StatelessWidget {
                 ),
                 Text(
                   entry == null
-                      ? 'Sin entrenar recientemente'
+                      ? strings.noRecent
                       : status == MuscleStatus.fresh
-                          ? '✅ Listo'
-                          : '⏳ ${hoursLeft}h restantes (${(percent * 100).round()}%)',
+                          ? strings.statusFresh
+                          : strings.statusRecoveringHours(hoursLeft),
                   style: TextStyle(
                     color: entry == null ? AppTheme.textSecondary : color,
                     fontSize: 12,

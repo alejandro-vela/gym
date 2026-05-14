@@ -358,6 +358,17 @@
     "no_connection": "Sin conexión a internet"
   },
 
+  "login": {
+    "title": "GymTrack Pro",
+    "tagline": "Tu compañero de gimnasio personal",
+    "google_btn": "Continuar con Google",
+    "apple_btn": "Continuar con Apple",
+    "legal": "Al continuar aceptas nuestros Términos y Política de Privacidad.",
+    "error_cancelled": "Inicio de sesión cancelado.",
+    "error_network": "Sin conexión. Verifica tu internet.",
+    "error_generic": "Ocurrió un error. Intenta de nuevo."
+  },
+
   "workout_types": {
     "strength": "Fuerza",
     "functional": "Funcional",

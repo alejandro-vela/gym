@@ -6,11 +6,14 @@ App Flutter de seguimiento de gimnasio (GymTrack Pro). Flutter 3.35.7 via FVM.
 
 ## Comandos esenciales
 
+> ⚠️ El entorno tiene `PUB_HOSTED_URL` apuntando a un servidor corporativo con error TLS.
+> Siempre prefija los comandos `flutter` con `PUB_HOSTED_URL=https://pub.dev`:
+
 ```bash
-fvm flutter run               # correr en dispositivo
-fvm flutter analyze           # análisis estático (debe pasar sin warnings nuevos)
-fvm flutter pub get           # instalar dependencias
-dart analyze                  # análisis rápido
+PUB_HOSTED_URL=https://pub.dev fvm flutter run
+PUB_HOSTED_URL=https://pub.dev fvm flutter analyze
+PUB_HOSTED_URL=https://pub.dev fvm flutter pub get
+dart analyze   # este no requiere el prefijo
 ```
 
 ## Arquitectura — MVP + Provider
@@ -96,10 +99,52 @@ No hacer queries directas en Widgets ni Presenters — todo pasa por `DatabaseSe
 
 Firebase Auth con email, Google Sign-In y Sign in with Apple. Lógica en [lib/services/auth_service.dart](lib/services/auth_service.dart).
 
-## i18n
+## i18n — Sistema de textos (regla obligatoria)
 
-Localización en `assets/i18n/`. Provider en [lib/i18n/language_provider.dart](lib/i18n/language_provider.dart).
-Todos los textos visibles al usuario deben pasar por localización.
+**Ningún texto visible al usuario puede estar hardcodeado en un Widget.** Todo pasa por el sistema de localización.
+
+### Flujo completo
+
+```
+assets/i18n/{lang}.json  →  LanguageProvider (carga en startup)
+  ↓  context.read<LanguageProvider>().strings  (en el Presenter)
+  AppLocalizations → sección tipada (e.g. s.login)
+  ↓  Presenter construye UiModel con los campos de texto
+  view.setUI(model)
+  ↓  Widget usa _model.someLabel en build()
+```
+
+### Reglas
+
+1. **Un JSON por idioma** (`es.json`, `en.json`) en `assets/i18n/`.  
+   Cada feature tiene su propia sección raíz: `"login": { ... }`, `"home": { ... }`.
+
+2. **Clase tipada por sección**: cada sección JSON tiene su clase `XxxStrings` en  
+   [lib/i18n/app_localizations.dart](lib/i18n/app_localizations.dart).  
+   La clase se registra en `AppLocalizations` (constructor + `fromJson`).
+
+3. **El Presenter lee los textos**, los mete en el UiModel y llama `view.setUI(model)`.  
+   El Widget no accede a `LanguageProvider` directamente.
+
+4. **El UiModel contiene los strings** como campos `final String`:  
+   ```dart
+   class LoginModel {
+     const LoginModel({required this.titleGoogle, ...});
+     final String titleGoogle;
+   }
+   ```
+
+5. Mensajes de error, labels de botones, títulos de dialogs: **todo en JSON**.
+
+### Para agregar textos de una nueva feature
+
+```
+1. Agregar sección en assets/i18n/es.json y en.json
+2. Crear clase XxxStrings con fromJson en app_localizations.dart
+3. Registrar en AppLocalizations (constructor + fromJson + campo final)
+4. En el Presenter: final s = context.read<LanguageProvider>().strings.xxx;
+5. Incluir en el UiModel y pasar al Widget via setUI
+```
 
 ## Lo que NO hacer
 

@@ -1,12 +1,16 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../../i18n/app_localizations.dart';
+import '../../i18n/language_provider.dart';
 import '../../models/machine.dart';
 import '../../providers/machines_provider.dart';
 import '../../theme/app_theme.dart';
+import 'widgets/difficulty_selector.dart';
+import 'widgets/machine_photo_picker.dart';
+import 'widgets/muscle_group_selector.dart';
+import 'widgets/precautions_section.dart';
 
 class AddEditMachineScreen extends StatefulWidget {
   const AddEditMachineScreen({super.key, this.machine});
@@ -81,6 +85,7 @@ class _AddEditMachineScreenState extends State<AddEditMachineScreen> {
   }
 
   Future<ImageSource?> _showSourceDialog() async {
+    final AppLocalizations loc = context.read<LanguageProvider>().strings;
     return showModalBottomSheet<ImageSource>(
       context: context,
       backgroundColor: AppTheme.cardDark,
@@ -101,9 +106,9 @@ class _AddEditMachineScreenState extends State<AddEditMachineScreen> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const Text(
-              'Seleccionar foto',
-              style: TextStyle(
+            Text(
+              loc.addMachine.sourceDialogTitle,
+              style: const TextStyle(
                 color: AppTheme.textPrimary,
                 fontWeight: FontWeight.bold,
                 fontSize: 17,
@@ -113,18 +118,18 @@ class _AddEditMachineScreenState extends State<AddEditMachineScreen> {
             Row(
               children: <Widget>[
                 Expanded(
-                  child: _SourceButton(
+                  child: SourceButton(
                     icon: Icons.camera_alt_rounded,
-                    label: 'Cámara',
+                    label: loc.common.camera,
                     onTap: () =>
                         Navigator.pop(context, ImageSource.camera),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _SourceButton(
+                  child: SourceButton(
                     icon: Icons.photo_library_rounded,
-                    label: 'Galería',
+                    label: loc.common.gallery,
                     onTap: () =>
                         Navigator.pop(context, ImageSource.gallery),
                   ),
@@ -154,9 +159,11 @@ class _AddEditMachineScreenState extends State<AddEditMachineScreen> {
       return;
     }
     if (_selectedMuscles.isEmpty) {
+      final AddMachineStrings s =
+          context.read<LanguageProvider>().strings.addMachine;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selecciona al menos un grupo muscular'),
+        SnackBar(
+          content: Text(s.musclesRequiredError),
           backgroundColor: AppTheme.danger,
         ),
       );
@@ -192,9 +199,13 @@ class _AddEditMachineScreenState extends State<AddEditMachineScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations loc = context.read<LanguageProvider>().strings;
+    final AddMachineStrings s = loc.addMachine;
+    final MachinesStrings ms = loc.machines;
+    final CommonStrings cs = loc.common;
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Editar máquina' : 'Nueva máquina'),
+        title: Text(_isEditing ? s.titleEdit : s.titleNew),
         actions: <Widget>[
           TextButton(
             onPressed: _isSaving ? null : _save,
@@ -207,9 +218,9 @@ class _AddEditMachineScreenState extends State<AddEditMachineScreen> {
                       color: AppTheme.primaryOrange,
                     ),
                   )
-                : const Text(
-                    'Guardar',
-                    style: TextStyle(
+                : Text(
+                    cs.save,
+                    style: const TextStyle(
                       color: AppTheme.primaryOrange,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -223,34 +234,30 @@ class _AddEditMachineScreenState extends State<AddEditMachineScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: <Widget>[
-            // Main photo
-            _PhotoPicker(
+            MachinePhotoPicker(
               photoPath: _photoPath,
-              label: 'Foto de la máquina',
+              label: s.photoLabel,
+              tapToAddLabel: cs.tapToAddPhoto,
               icon: Icons.fitness_center_rounded,
               onTap: () => _pickImage(),
             ),
             const SizedBox(height: 20),
 
-            // Name
-            const _SectionLabel('Información básica'),
+            _SectionLabel(s.sectionBasic),
             const SizedBox(height: 8),
             TextFormField(
               controller: _nameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Nombre de la máquina *',
-              ),
+              decoration: InputDecoration(labelText: s.fieldName),
               style: const TextStyle(color: AppTheme.textPrimary),
               validator: (String? v) =>
-                  v == null || v.isEmpty ? 'Campo requerido' : null,
+                  v == null || v.isEmpty ? cs.requiredField : null,
             ),
             const SizedBox(height: 12),
 
-            // Category
             DropdownButtonFormField<String>(
               initialValue: _category,
               dropdownColor: AppTheme.cardDark,
-              decoration: const InputDecoration(labelText: 'Categoría'),
+              decoration: InputDecoration(labelText: s.fieldCategory),
               style: const TextStyle(color: AppTheme.textPrimary),
               items: kCategories
                   .map(
@@ -264,146 +271,60 @@ class _AddEditMachineScreenState extends State<AddEditMachineScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Difficulty
-            const _SectionLabel('Dificultad'),
+            _SectionLabel(s.sectionDifficulty),
             const SizedBox(height: 8),
-            Row(
-              children: <int>[1, 2, 3].map((int d) {
-                final List<String> labels = <String>[
-                  'Principiante',
-                  'Intermedio',
-                  'Avanzado',
-                ];
-                final List<Color> colors = <Color>[
-                  AppTheme.success,
-                  AppTheme.warning,
-                  AppTheme.danger,
-                ];
-                final bool isSelected = _difficulty == d;
-                return Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(right: d < 3 ? 8 : 0),
-                    child: GestureDetector(
-                      onTap: () => setState(() => _difficulty = d),
-                      child: Container(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? colors[d - 1].withValues(alpha: 0.2)
-                              : AppTheme.cardDark,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: isSelected
-                                ? colors[d - 1]
-                                : const Color(0xFF333333),
-                            width: isSelected ? 2 : 1,
-                          ),
-                        ),
-                        child: Text(
-                          labels[d - 1],
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: isSelected
-                                ? colors[d - 1]
-                                : AppTheme.textSecondary,
-                            fontSize: 12,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+            DifficultySelector(
+              difficulty: _difficulty,
+              labels: <String>[
+                ms.difficulty1,
+                ms.difficulty2,
+                ms.difficulty3,
+              ],
+              onSelect: (int d) => setState(() => _difficulty = d),
             ),
             const SizedBox(height: 20),
 
-            // Muscle groups
-            const _SectionLabel('Músculos trabajados *'),
+            _SectionLabel(s.sectionMuscles),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: kMuscleGroups.map((String muscle) {
-                final bool isSelected = _selectedMuscles.contains(muscle);
-                return GestureDetector(
-                  onTap: () => setState(() {
-                    if (isSelected) {
-                      _selectedMuscles.remove(muscle);
-                    } else {
-                      _selectedMuscles.add(muscle);
-                    }
-                  }),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppTheme.primaryOrange.withValues(alpha: 0.2)
-                          : AppTheme.cardDark,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppTheme.primaryOrange
-                            : const Color(0xFF333333),
-                        width: isSelected ? 1.5 : 1,
-                      ),
-                    ),
-                    child: Text(
-                      muscle,
-                      style: TextStyle(
-                        color: isSelected
-                            ? AppTheme.primaryOrange
-                            : AppTheme.textSecondary,
-                        fontSize: 13,
-                        fontWeight: isSelected
-                            ? FontWeight.w600
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+            MuscleGroupSelector(
+              selectedMuscles: _selectedMuscles,
+              onToggle: (String muscle) => setState(() {
+                if (_selectedMuscles.contains(muscle)) {
+                  _selectedMuscles.remove(muscle);
+                } else {
+                  _selectedMuscles.add(muscle);
+                }
+              }),
             ),
             const SizedBox(height: 20),
 
-            // Description
-            const _SectionLabel('Descripción'),
+            _SectionLabel(s.sectionDescription),
             const SizedBox(height: 8),
             TextFormField(
               controller: _descCtrl,
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Descripción del ejercicio *',
-              ),
+              decoration: InputDecoration(labelText: s.fieldDescription),
               style: const TextStyle(color: AppTheme.textPrimary),
               validator: (String? v) =>
-                  v == null || v.isEmpty ? 'Campo requerido' : null,
+                  v == null || v.isEmpty ? cs.requiredField : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _howToUseCtrl,
               maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: 'Cómo usar la máquina *',
-              ),
+              decoration: InputDecoration(labelText: s.fieldHowToUse),
               style: const TextStyle(color: AppTheme.textPrimary),
               validator: (String? v) =>
-                  v == null || v.isEmpty ? 'Campo requerido' : null,
+                  v == null || v.isEmpty ? cs.requiredField : null,
             ),
             const SizedBox(height: 24),
 
-            // Precautions
-            const _SectionLabel('Precauciones'),
+            _SectionLabel(s.sectionPrecautions),
             const SizedBox(height: 8),
-            _PhotoPicker(
+            MachinePhotoPicker(
               photoPath: _precautionPhotoPath,
-              label: 'Foto de precaución (opcional)',
+              label: s.precautionPhotoLabel,
+              tapToAddLabel: cs.tapToAddPhoto,
               icon: Icons.warning_amber_rounded,
               color: AppTheme.warning,
               onTap: () => _pickImage(isPrecaution: true),
@@ -415,8 +336,8 @@ class _AddEditMachineScreenState extends State<AddEditMachineScreen> {
                 Expanded(
                   child: TextField(
                     controller: _precautionCtrl,
-                    decoration: const InputDecoration(
-                      hintText: 'Agregar precaución...',
+                    decoration: InputDecoration(
+                      hintText: s.precautionPlaceholder,
                     ),
                     style: const TextStyle(color: AppTheme.textPrimary),
                     onSubmitted: (_) => _addPrecaution(),
@@ -434,52 +355,11 @@ class _AddEditMachineScreenState extends State<AddEditMachineScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            ..._precautions.asMap().entries.map(
-                  (MapEntry<int, String> e) => Dismissible(
-                    key: Key('prec_${e.key}'),
-                    direction: DismissDirection.endToStart,
-                    onDismissed: (_) =>
-                        setState(() => _precautions.removeAt(e.key)),
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 16),
-                      color: AppTheme.danger.withValues(alpha: 0.2),
-                      child: const Icon(
-                        Icons.delete_rounded,
-                        color: AppTheme.danger,
-                      ),
-                    ),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 3),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppTheme.warning.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: AppTheme.warning.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      child: Row(
-                        children: <Widget>[
-                          const Icon(
-                            Icons.warning_rounded,
-                            color: AppTheme.warning,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              e.value,
-                              style: const TextStyle(
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+            PrecautionsList(
+              precautions: _precautions,
+              onDismiss: (int index) =>
+                  setState(() => _precautions.removeAt(index)),
+            ),
             const SizedBox(height: 40),
           ],
         ),
@@ -501,124 +381,6 @@ class _SectionLabel extends StatelessWidget {
         fontSize: 13,
         fontWeight: FontWeight.bold,
         letterSpacing: 0.5,
-      ),
-    );
-  }
-}
-
-class _PhotoPicker extends StatelessWidget {
-  const _PhotoPicker({
-    required this.photoPath,
-    required this.label,
-    required this.icon,
-    this.color = AppTheme.primaryOrange,
-    required this.onTap,
-    this.height = 200,
-  });
-  final String? photoPath;
-  final String label;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: height,
-        decoration: BoxDecoration(
-          color: AppTheme.cardDark,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: photoPath != null && File(photoPath!).existsSync()
-            ? Stack(
-                fit: StackFit.expand,
-                children: <Widget>[
-                  Image.file(File(photoPath!), fit: BoxFit.cover),
-                  Positioned(
-                    bottom: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.edit_rounded,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Icon(icon, color: color.withValues(alpha: 0.5), size: 40),
-                  const SizedBox(height: 8),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: color.withValues(alpha: 0.7),
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Toca para agregar foto',
-                    style: TextStyle(
-                      color: color.withValues(alpha: 0.4),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-}
-
-class _SourceButton extends StatelessWidget {
-  const _SourceButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: AppTheme.primaryOrange.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border:
-              Border.all(color: AppTheme.primaryOrange.withValues(alpha: 0.3)),
-        ),
-        child: Column(
-          children: <Widget>[
-            Icon(icon, color: AppTheme.primaryOrange, size: 32),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: const TextStyle(
-                color: AppTheme.primaryOrange,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
