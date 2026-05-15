@@ -1,1 +1,30 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"gymapp-5d59d","appId":"1:1075527110867:android:ab234416455c573e4c8426","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"gymapp-5d59d","appId":"1:1075527110867:ios:d6098e734209508f4c8426","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"gymapp-5d59d","configurations":{"android":"1:1075527110867:android:ab234416455c573e4c8426","ios":"1:1075527110867:ios:d6098e734209508f4c8426"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "gymapp-5d59d",
+          "appId": "1:1075527110867:android:ab234416455c573e4c8426",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "gymapp-5d59d",
+          "appId": "1:1075527110867:ios:d6098e734209508f4c8426",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "gymapp-5d59d",
+          "configurations": {
+            "android": "1:1075527110867:android:ab234416455c573e4c8426",
+            "ios": "1:1075527110867:ios:d6098e734209508f4c8426"
+          }
+        }
+      }
+    }
+  }
+}
