@@ -2,27 +2,30 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
-import '../../../i18n/app_localizations.dart';
-import '../../../i18n/language_provider.dart';
 import '../../../models/body_measurement.dart';
-import '../../../providers/workout_provider.dart';
+import '../../../models/ui/progress_model.dart';
 import '../../../theme/app_theme.dart';
+import '../../progress_tab/progress_presenter.dart';
 import 'measurement_grid.dart';
 import 'measurement_history_card.dart';
 import 'stat_box.dart';
 import 'weight_chart.dart';
 
 class MeasurementsTab extends StatelessWidget {
-  const MeasurementsTab({super.key, required this.provider});
-  final ProgressProvider provider;
+  const MeasurementsTab({
+    super.key,
+    required this.model,
+    required this.presenter,
+  });
+
+  final ProgressModel model;
+  final ProgressPresenter presenter;
 
   @override
   Widget build(BuildContext context) {
-    final ProgressStrings s = context.read<LanguageProvider>().strings.progress;
-    final List<BodyMeasurement> measurements = provider.measurements;
-    final BodyMeasurement? latest = provider.latestMeasurement;
+    final List<BodyMeasurement> measurements = model.measurements;
+    final BodyMeasurement? latest = model.latestMeasurement;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -30,15 +33,15 @@ class MeasurementsTab extends StatelessWidget {
         Row(
           children: <Widget>[
             StatBox(
-              label: s.statWorkouts,
-              value: '${provider.totalWorkouts}',
+              label: model.strings.statWorkouts,
+              value: '${model.totalWorkouts}',
               icon: Icons.fitness_center_rounded,
               color: AppTheme.primaryOrange,
             ),
             const SizedBox(width: 12),
             StatBox(
-              label: s.statMinutes,
-              value: '${provider.totalMinutes}',
+              label: model.strings.statMinutes,
+              value: '${model.totalMinutes}',
               icon: Icons.timer_rounded,
               color: AppTheme.info,
             ),
@@ -47,14 +50,14 @@ class MeasurementsTab extends StatelessWidget {
         const SizedBox(height: 20),
 
         if (measurements.length >= 2) ...<Widget>[
-          _SectionTitle(s.sectionWeightChart),
+          _SectionTitle(model.strings.sectionWeightChart),
           const SizedBox(height: 8),
           WeightChart(measurements: measurements),
           const SizedBox(height: 20),
         ],
 
         if (latest != null) ...<Widget>[
-          _SectionTitle(s.sectionLatest),
+          _SectionTitle(model.strings.sectionLatest),
           const SizedBox(height: 8),
           Text(
             DateFormat('d MMM yyyy').format(latest.date),
@@ -64,23 +67,23 @@ class MeasurementsTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          MeasurementGrid(measurement: latest, strings: s),
+          MeasurementGrid(measurement: latest, strings: model.strings),
           const SizedBox(height: 20),
         ],
 
-        _SectionTitle(s.sectionHistory),
+        _SectionTitle(model.strings.sectionHistory),
         const SizedBox(height: 8),
         if (measurements.isEmpty)
           _EmptyMeasurements(
-            title: s.emptyMeasurementsTitle,
-            body: s.emptyMeasurementsBody,
+            title: model.strings.emptyMeasurementsTitle,
+            body: model.strings.emptyMeasurementsBody,
           )
         else
           ...measurements.map(
             (BodyMeasurement m) => MeasurementHistoryCard(
               measurement: m,
               onDelete: () => unawaited(
-                provider.deleteMeasurement(m.id!),
+                presenter.deleteMeasurement(context, m),
               ),
             ),
           ),

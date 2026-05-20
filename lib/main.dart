@@ -60,11 +60,7 @@ class GymTrackApp extends StatelessWidget {
           create: (_) => WorkoutProvider(),
         ),
         ChangeNotifierProvider<ProgressProvider>(
-          create: (_) {
-            final ProgressProvider p = ProgressProvider();
-            unawaited(p.loadProgress());
-            return p;
-          },
+          create: (_) => ProgressProvider(),
         ),
         ChangeNotifierProvider<HealthProvider>(
           create: (_) => HealthProvider(),

@@ -1,12 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import '../../i18n/app_localizations.dart';
-import '../../i18n/language_provider.dart';
-import '../../providers/workout_provider.dart';
+import '../../models/ui/progress_model.dart';
 import '../../theme/app_theme.dart';
+import '../progress_tab/progress_presenter.dart';
 import 'widgets/add_measurement_sheet.dart';
 import 'widgets/history_tab.dart';
 import 'widgets/measurements_tab.dart';
@@ -19,34 +17,56 @@ class ProgressScreen extends StatefulWidget {
 }
 
 class _ProgressScreenState extends State<ProgressScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin
+    implements ProgressView {
+  late ProgressPresenter _presenter;
   late TabController _tabCtrl;
+  ProgressModel? _model;
 
   @override
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 2, vsync: this);
+    _presenter = ProgressPresenter(view: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(context.read<ProgressProvider>().loadProgress());
+      _presenter.getUI(context);
     });
   }
 
   @override
   void dispose() {
     _tabCtrl.dispose();
+    _presenter.dispose();
     super.dispose();
   }
 
   @override
+  void setUI(ProgressModel model) {
+    if (mounted) {
+      setState(() => _model = model);
+    }
+  }
+
+  @override
+  void showAddSheet() => _showAddMeasurementDialog(context);
+
+  @override
   Widget build(BuildContext context) {
-    final ProgressStrings s = context.watch<LanguageProvider>().strings.progress;
+    if (_model == null) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: AppTheme.primaryOrange),
+        ),
+      );
+    }
+    final ProgressModel m = _model!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.title),
+        title: Text(m.strings.title),
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.add_rounded),
-            onPressed: () => _showAddMeasurementDialog(context),
+            onPressed: () => _presenter.onAddTap(),
           ),
         ],
         bottom: TabBar(
@@ -55,29 +75,22 @@ class _ProgressScreenState extends State<ProgressScreen>
           labelColor: AppTheme.primaryOrange,
           unselectedLabelColor: AppTheme.textSecondary,
           tabs: <Widget>[
-            Tab(text: s.tabMeasurements),
-            Tab(text: s.tabHistory),
+            Tab(text: m.strings.tabMeasurements),
+            Tab(text: m.strings.tabHistory),
           ],
         ),
       ),
-      body: Consumer<ProgressProvider>(
-        builder: (BuildContext context, ProgressProvider provider, _) {
-          if (provider.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.primaryOrange,
-              ),
-            );
-          }
-          return TabBarView(
-            controller: _tabCtrl,
-            children: <Widget>[
-              MeasurementsTab(provider: provider),
-              HistoryTab(provider: provider),
-            ],
-          );
-        },
-      ),
+      body: m.isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: AppTheme.primaryOrange),
+            )
+          : TabBarView(
+              controller: _tabCtrl,
+              children: <Widget>[
+                MeasurementsTab(model: m, presenter: _presenter),
+                HistoryTab(model: m, presenter: _presenter),
+              ],
+            ),
     );
   }
 
@@ -89,10 +102,7 @@ class _ProgressScreenState extends State<ProgressScreen>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => ChangeNotifierProvider<ProgressProvider>.value(
-        value: context.read<ProgressProvider>(),
-        child: const AddMeasurementSheet(),
-      ),
+      builder: (_) => AddMeasurementSheet(presenter: _presenter),
     ),);
   }
 }
