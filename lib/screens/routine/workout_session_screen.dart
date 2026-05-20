@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:provider/provider.dart';
 
 import '../../i18n/app_localizations.dart';
@@ -124,6 +125,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     );
 
     setState(() => _currentSets[setIndex].completed = true);
+    unawaited(HapticFeedback.heavyImpact());
 
     _startRestTimer();
   }

@@ -358,6 +358,30 @@
     "no_connection": "No internet connection"
   },
 
+  "profile": {
+    "title": "My profile",
+    "sign_out": "Sign out",
+    "sign_out_confirm": "Sign out?",
+    "sign_out_body": "You can sign back in anytime.",
+    "guest": "User",
+    "stats_workouts": "Workouts",
+    "stats_streak": "Streak"
+  },
+
+  "onboarding": {
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Get started!",
+    "slide1_title": "Welcome to GymTrack Pro",
+    "slide1_body": "Your personal gym companion. Track, analyze, and crush your limits.",
+    "slide2_title": "Build your routine",
+    "slide2_body": "Organize exercises by weekday and follow your plan with precision.",
+    "slide3_title": "Explore your catalog",
+    "slide3_body": "Add machines with photos, instructions, and safety notes.",
+    "slide4_title": "Measure your progress",
+    "slide4_body": "Log body measurements, visualize charts, and celebrate every achievement."
+  },
+
   "login": {
     "title": "GymTrack Pro",
     "tagline": "Your personal gym companion",

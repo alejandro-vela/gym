@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../models/routine_exercise.dart';
 import '../../models/ui/home_model.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/language_selector.dart';
+import '../profile/profile_sheet.dart';
 import '../routine/workout_session_screen.dart';
 import 'home_presenter.dart';
 import 'widgets/home_active_session.dart';
@@ -115,12 +115,17 @@ class _HomeScreenState extends State<HomeScreen> implements HomeView {
     );
   }
 
-  // ignore: avoid-returning-widgets
   SliverAppBar _buildAppBar(HomeModel m) {
     return SliverAppBar(
       expandedHeight: 140,
       pinned: true,
-      actions: const <Widget>[LanguageSelectorButton()],
+      actions: <Widget>[
+        IconButton(
+          icon: const Icon(Icons.account_circle_rounded),
+          onPressed: () => unawaited(ProfileSheet.show(context)),
+          tooltip: 'Perfil',
+        ),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: const BoxDecoration(

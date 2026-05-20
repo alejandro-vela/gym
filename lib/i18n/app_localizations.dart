@@ -12,6 +12,8 @@ import 'strings/home_strings.dart';
 import 'strings/login_strings.dart';
 import 'strings/machines_strings.dart';
 import 'strings/nav_strings.dart';
+import 'strings/onboarding_strings.dart';
+import 'strings/profile_strings.dart';
 import 'strings/progress_strings.dart';
 import 'strings/recovery_strings.dart';
 import 'strings/routine_strings.dart';
@@ -25,6 +27,8 @@ export 'strings/home_strings.dart';
 export 'strings/login_strings.dart';
 export 'strings/machines_strings.dart';
 export 'strings/nav_strings.dart';
+export 'strings/onboarding_strings.dart';
+export 'strings/profile_strings.dart';
 export 'strings/progress_strings.dart';
 export 'strings/recovery_strings.dart';
 export 'strings/routine_strings.dart';
@@ -36,6 +40,8 @@ class AppLocalizations {
     required this.images,
     required this.nav,
     required this.common,
+    required this.profile,
+    required this.onboarding,
     required this.login,
     required this.home,
     required this.machines,
@@ -58,6 +64,10 @@ class AppLocalizations {
       images: ImagePaths.fromJson(json['images'] as Map<String, dynamic>),
       nav: NavStrings.fromJson(json['nav'] as Map<String, dynamic>),
       common: CommonStrings.fromJson(json['common'] as Map<String, dynamic>),
+      profile: ProfileStrings.fromJson(json['profile'] as Map<String, dynamic>),
+      onboarding: OnboardingStrings.fromJson(
+        json['onboarding'] as Map<String, dynamic>,
+      ),
       login: LoginStrings.fromJson(json['login'] as Map<String, dynamic>),
       home: HomeStrings.fromJson(json['home'] as Map<String, dynamic>),
       machines:
@@ -93,6 +103,8 @@ class AppLocalizations {
   final ImagePaths images;
   final NavStrings nav;
   final CommonStrings common;
+  final ProfileStrings profile;
+  final OnboardingStrings onboarding;
   final LoginStrings login;
   final HomeStrings home;
   final MachinesStrings machines;
